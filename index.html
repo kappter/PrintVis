@@ -100,6 +100,10 @@
       setDraggingElement,
       dragOffset,
       setDragOffset,
+      isResizing,
+      setIsResizing,
+      resizeElement,
+      setResizeElement,
       exportToLaTeX
     }) => {
       console.log('SpreadCanvas rendering');
@@ -116,7 +120,7 @@
       };
 
       const handleCanvasMouseDown = (e) => {
-        if (dragging) return; // Prioritize crosshair dragging
+        if (dragging || isResizing) return;
         const canvas = document.getElementById('spread-canvas');
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -138,13 +142,31 @@
             y <= bounds.y + bounds.height
           ) {
             modules[module].forEach((element, index) => {
+              const elementWidth = element.type === 'shape' ? (element.width || 150) : 150;
+              const elementHeight = element.type === 'shape' ? (element.height || 100) : 100;
               const elementX = bounds.x + 10 + element.col * 150;
               const elementY = bounds.y + 10 + element.row * 100;
+
+              // Check for resize handle (bottom-right corner of shapes)
+              if (
+                element.type === 'shape' &&
+                x >= elementX + elementWidth - 15 &&
+                x <= elementX + elementWidth &&
+                y >= elementY + elementHeight - 15 &&
+                y <= elementY + elementHeight
+              ) {
+                setIsResizing(true);
+                setResizeElement({ module, index, ...element });
+                console.log('Started resizing shape:', element, 'in module:', module);
+                return;
+              }
+
+              // Check for dragging
               if (
                 x >= elementX &&
-                x <= elementX + 140 &&
+                x <= elementX + elementWidth &&
                 y >= elementY &&
-                y <= elementY + 90
+                y <= elementY + elementHeight
               ) {
                 setDraggingElement({ module, index, ...element });
                 setDragOffset({ x: x - elementX, y: y - elementY });
@@ -175,12 +197,14 @@
           const x = e.clientX - rect.left;
           const y = e.clientY - rect.top;
 
-          const bounds = {
-            1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
-            2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
-            3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
-            4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
-          }[draggingElement.module];
+          const bounds = draggingElement.isDominant
+            ? {
+                x: Math.min(modulesBounds[draggingElement.spansModules[0]].x, modulesBounds[draggingElement.spansModules[1]].x),
+                y: Math.min(modulesBounds[draggingElement.spansModules[0]].y, modulesBounds[draggingElement.spansModules[1]].y),
+                width: modulesBounds[draggingElement.spansModules[0]].width + modulesBounds[draggingElement.spansModules[1]].width,
+                height: Math.min(modulesBounds[draggingElement.spansModules[0]].height, modulesBounds[draggingElement.spansModules[1]].height),
+              }
+            : modulesBounds[draggingElement.module];
 
           const maxCols = Math.floor((bounds.width - 10) / 150);
           const maxRows = Math.floor((bounds.height - 10) / 100);
@@ -188,6 +212,20 @@
           const newRow = Math.max(0, Math.min(maxRows - 1, Math.floor((y - bounds.y - 10 - dragOffset.y) / 100)));
 
           setDraggingElement((prev) => ({ ...prev, col: newCol, row: newRow }));
+        } else if (isResizing && resizeElement) {
+          const canvas = document.getElementById('spread-canvas');
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const bounds = modulesBounds[resizeElement.module];
+          const elementX = bounds.x + 10 + resizeElement.col * 150;
+          const elementY = bounds.y + 10 + resizeElement.row * 100;
+
+          const newWidth = Math.max(150, Math.min(bounds.width - 10 - resizeElement.col * 150, x - elementX));
+          const newHeight = Math.max(100, Math.min(bounds.height - 10 - resizeElement.row * 100, y - elementY));
+
+          setResizeElement((prev) => ({ ...prev, width: newWidth, height: newHeight }));
         }
       };
 
@@ -197,25 +235,38 @@
           setDragging(null);
         }
         if (draggingElement) {
-          const { module, index, col, row } = draggingElement;
-          const bounds = {
-            1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
-            2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
-            3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
-            4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
-          }[module];
+          const { module, index, col, row, isDominant, spansModules } = draggingElement;
+          const bounds = isDominant
+            ? {
+                x: Math.min(modulesBounds[spansModules[0]].x, modulesBounds[spansModules[1]].x),
+                y: Math.min(modulesBounds[spansModules[0]].y, modulesBounds[spansModules[1]].y),
+                width: modulesBounds[spansModules[0]].width + modulesBounds[spansModules[1]].width,
+                height: Math.min(modulesBounds[spansModules[0]].height, modulesBounds[spansModules[1]].height),
+              }
+            : modulesBounds[module];
 
           const maxCols = Math.floor((bounds.width - 10) / 150);
           const maxRows = Math.floor((bounds.height - 10) / 100);
           const newCol = Math.max(0, Math.min(maxCols - 1, col));
           const newRow = Math.max(0, Math.min(maxRows - 1, row));
 
-          const isOccupied = modules[module].some(
-            (el, i) =>
-              i !== index &&
-              el.col === newCol &&
-              el.row === newRow
-          );
+          const isOccupied = isDominant
+            ? spansModules.some((mod) =>
+                modules[mod].some(
+                  (el, i) =>
+                    i !== index &&
+                    el.col === newCol &&
+                    el.row === newRow &&
+                    !el.isDominant
+                )
+              )
+            : modules[module].some(
+                (el, i) =>
+                  i !== index &&
+                  el.col === newCol &&
+                  el.row === newRow &&
+                  !el.isDominant
+              );
 
           if (!isOccupied) {
             setModules((prev) => {
@@ -229,10 +280,21 @@
           }
           setDraggingElement(null);
         }
+        if (isResizing && resizeElement) {
+          const { module, index, col, row, width, height } = resizeElement;
+          setModules((prev) => {
+            const updatedModule = [...prev[module]];
+            updatedModule[index] = { ...updatedModule[index], width, height };
+            console.log('Resized shape to:', { width, height }, 'in module:', module);
+            return { ...prev, [module]: updatedModule };
+          });
+          setIsResizing(false);
+          setResizeElement(null);
+        }
       };
 
       const handleCanvasClick = (e) => {
-        if (dragging || draggingElement) return;
+        if (dragging || draggingElement || isResizing) return;
         const canvas = document.getElementById('spread-canvas');
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -263,9 +325,9 @@
             4: { width: 1700 - crosshairX, height: 1100 - crosshairY },
           }[selectedModule];
 
-          const elementWidth = 150;
-          const elementHeight = 100;
-          const maxCols = Math.floor((bounds.width - 10) / elementWidth);
+          const elementWidth = type === 'dominant-photo' ? 300 : 150;
+          const elementHeight = type === 'dominant-photo' ? 200 : 100;
+          const maxCols = Math.floor((bounds.width - 10) / 150);
           if (maxCols < 1) {
             console.warn('Quadrant too narrow for elements');
             return prev;
@@ -275,7 +337,7 @@
           let row = 0;
           if (moduleElements.length > 0) {
             const lastElement = moduleElements[moduleElements.length - 1];
-            col = lastElement.col + 1;
+            col = lastElement.col + (lastElement.isDominant ? 2 : 1);
             row = lastElement.row;
             if (col >= maxCols) {
               col = 0;
@@ -288,12 +350,30 @@
             return prev;
           }
 
-          console.log('Adding element:', { type, col, row }, 'to module:', selectedModule);
+          let newElement = { type, col, row };
+          if (type === 'dominant-photo') {
+            const existingDominant = Object.values(prev).flat().find((el) => el.isDominant);
+            if (existingDominant) {
+              console.warn('Only one dominant photo allowed');
+              return prev;
+            }
+            newElement.isDominant = true;
+            newElement.spansModules = selectedModule <= 2 ? [2, 4] : [1, 3];
+          }
+
+          console.log('Adding element:', newElement, 'to module:', selectedModule);
           return {
             ...prev,
-            [selectedModule]: [...moduleElements, { type, col, row }],
+            [selectedModule]: [...moduleElements, newElement],
           };
         });
+      };
+
+      const modulesBounds = {
+        1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+        2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+        3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+        4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
       };
 
       useEffect(() => {
@@ -325,13 +405,6 @@
         ctx.lineTo(1700, crosshairY);
         ctx.stroke();
 
-        const modulesBounds = {
-          1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
-          2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
-          3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
-          4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
-        };
-
         Object.keys(modulesBounds).forEach((module) => {
           const bounds = modulesBounds[module];
           if (parseInt(module) === selectedModule) {
@@ -341,15 +414,30 @@
             ctx.lineWidth = 1;
           }
 
-          const elementWidth = 150;
-          const elementHeight = 100;
-          modules[module].forEach(({ type, col, row }, index) => {
-            const x = bounds.x + 10 + col * elementWidth;
-            const y = bounds.y + 10 + row * elementHeight;
+          modules[module].forEach(({ type, col, row, width, height, isDominant, spansModules }, index) => {
+            const elementWidth = isDominant ? 300 : (type === 'shape' ? (width || 150) : 150);
+            const elementHeight = isDominant ? 200 : (type === 'shape' ? (height || 100) : 100);
+            let x = bounds.x + 10 + col * 150;
+            let y = bounds.y + 10 + row * 100;
+
+            if (isDominant) {
+              x = crosshairX - 150; // Center on gutter
+              y = bounds.y + 10 + row * 100;
+            }
 
             ctx.strokeStyle = draggingElement && draggingElement.module === module && draggingElement.index === index ? '#ffff00' : '#000';
             ctx.lineWidth = draggingElement && draggingElement.module === module && draggingElement.index === index ? 3 : 1;
-            ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
+
+            // Draw shapes first (backdrop)
+            if (type === 'shape') {
+              ctx.fillStyle = '#666';
+              ctx.globalAlpha = 0.5;
+              ctx.fillRect(x, y, elementWidth - 10, elementHeight - 10);
+              ctx.globalAlpha = 1;
+              ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
+            } else {
+              ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
+            }
 
             ctx.fillStyle = '#000';
             if (type === 'title') {
@@ -358,16 +446,18 @@
             } else if (type === 'copy') {
               ctx.font = '12px Arial';
               ctx.fillText('Body text...', x + 5, y + 20);
-            } else if (type === 'photo') {
-              ctx.strokeRect(x + 5, y + 5, 80, 80);
+            } else if (type === 'photo' || type === 'dominant-photo') {
+              ctx.strokeRect(x + 5, y + 5, elementWidth - 15, elementHeight - 15);
               ctx.font = '10px Arial';
-              ctx.fillText('Photo', x + 5, y + 95);
+              ctx.fillText(type === 'dominant-photo' ? 'Dominant Photo' : 'Photo', x + 5, y + elementHeight - 5);
             } else if (type === 'caption') {
               ctx.font = '10px Arial';
               ctx.fillText('Caption...', x + 5, y + 20);
-            } else if (type === 'shape') {
-              ctx.fillStyle = '#666';
-              ctx.fillRect(x + 5, y + 5, 50, 50);
+            }
+
+            if (type === 'shape' && (!draggingElement || (draggingElement.module !== module || draggingElement.index !== index))) {
+              ctx.fillStyle = '#000';
+              ctx.fillRect(x + elementWidth - 15, y + elementHeight - 15, 10, 10);
             }
             ctx.lineWidth = 1;
           });
@@ -381,12 +471,22 @@
 
         if (draggingElement) {
           console.log('Rendering dragged element:', draggingElement);
-          const bounds = modulesBounds[draggingElement.module];
-          const x = bounds.x + 10 + draggingElement.col * 150;
+          const bounds = draggingElement.isDominant
+            ? {
+                x: crosshairX - 150,
+                y: modulesBounds[draggingElement.spansModules[0]].y + 10 + draggingElement.row * 100,
+                width: 300,
+                height: 200,
+              }
+            : modulesBounds[draggingElement.module];
+          const x = draggingElement.isDominant ? crosshairX - 150 : bounds.x + 10 + draggingElement.col * 150;
           const y = bounds.y + 10 + draggingElement.row * 100;
+          const elementWidth = draggingElement.isDominant ? 300 : 150;
+          const elementHeight = draggingElement.isDominant ? 200 : 100;
+
           ctx.strokeStyle = '#ffff00';
           ctx.lineWidth = 3;
-          ctx.strokeRect(x, y, 140, 90);
+          ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
           ctx.lineWidth = 1;
 
           ctx.fillStyle = '#000';
@@ -396,17 +496,35 @@
           } else if (draggingElement.type === 'copy') {
             ctx.font = '12px Arial';
             ctx.fillText('Body text...', x + 5, y + 20);
-          } else if (draggingElement.type === 'photo') {
-            ctx.strokeRect(x + 5, y + 5, 80, 80);
+          } else if (draggingElement.type === 'photo' || draggingElement.type === 'dominant-photo') {
+            ctx.strokeRect(x + 5, y + 5, elementWidth - 15, elementHeight - 15);
             ctx.font = '10px Arial';
-            ctx.fillText('Photo', x + 5, y + 95);
+            ctx.fillText(draggingElement.type === 'dominant-photo' ? 'Dominant Photo' : 'Photo', x + 5, y + elementHeight - 5);
           } else if (draggingElement.type === 'caption') {
             ctx.font = '10px Arial';
             ctx.fillText('Caption...', x + 5, y + 20);
           } else if (draggingElement.type === 'shape') {
             ctx.fillStyle = '#666';
-            ctx.fillRect(x + 5, y + 5, 50, 50);
+            ctx.globalAlpha = 0.5;
+            ctx.fillRect(x + 5, y + 5, elementWidth - 15, elementHeight - 15);
+            ctx.globalAlpha = 1;
           }
+        }
+
+        if (resizeElement) {
+          const bounds = modulesBounds[resizeElement.module];
+          const x = bounds.x + 10 + resizeElement.col * 150;
+          const y = bounds.y + 10 + resizeElement.row * 100;
+          ctx.fillStyle = '#666';
+          ctx.globalAlpha = 0.5;
+          ctx.fillRect(x, y, resizeElement.width - 10, resizeElement.height - 10);
+          ctx.globalAlpha = 1;
+          ctx.strokeStyle = '#ffff00';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x, y, resizeElement.width - 10, resizeElement.height - 10);
+          ctx.fillStyle = '#000';
+          ctx.fillRect(x + resizeElement.width - 15, y + resizeElement.height - 15, 10, 10);
+          ctx.lineWidth = 1;
         }
 
         ctx.font = '24px Arial';
@@ -415,7 +533,7 @@
 
         ctx.font = '14px Arial';
         ctx.fillText('Page 1 - Senior Events', 50, 1080);
-      }, [crosshairX, crosshairY, selectedModule, modules, draggingElement]);
+      }, [crosshairX, crosshairY, selectedModule, modules, draggingElement, resizeElement]);
 
       return (
         <div className="relative">
@@ -476,13 +594,20 @@
               >
                 S
               </button>
+              <button
+                className="w-8 h-8 bg-brown-600 text-white rounded flex items-center justify-center"
+                title="Add Dominant Photo"
+                onClick={() => addElement('dominant-photo')}
+              >
+                DP
+              </button>
             </div>
           )}
         </div>
       );
     };
 
-    const Sidebar = ({ exportToLaTeX }) => {
+    const Sidebar = ({ exportToLaTeX, randomizeSpread }) => {
       console.log('Sidebar rendering');
       return (
         <div className="w-64 bg-green-800 text-white p-4">
@@ -492,6 +617,12 @@
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Add Shape</button>
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Edit Title</button>
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Export Design</button>
+          <button
+            className="w-full bg-brown-600 p-2 mb-2 rounded"
+            onClick={randomizeSpread}
+          >
+            Randomize Spread
+          </button>
           <button
             className="w-full bg-brown-600 p-2 mb-2 rounded"
             onClick={exportToLaTeX}
@@ -509,16 +640,74 @@
       const [dragging, setDragging] = useState(null);
       const [selectedModule, setSelectedModule] = useState(null);
       const [modules, setModules] = useState({
-        1: [], // Top-left: [{ type, col, row }, ...]
-        2: [], // Top-right
-        3: [], // Bottom-left
-        4: [], // Bottom-right
+        1: [],
+        2: [],
+        3: [],
+        4: [],
       });
       const [draggingElement, setDraggingElement] = useState(null);
       const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+      const [isResizing, setIsResizing] = useState(false);
+      const [resizeElement, setResizeElement] = useState(null);
+
+      const randomizeSpread = () => {
+        const newModules = { 1: [], 2: [], 3: [], 4: [] };
+        const types = ['title', 'copy', 'photo', 'caption', 'shape'];
+        const bounds = {
+          1: { width: crosshairX, height: crosshairY },
+          2: { width: 1700 - crosshairX, height: crosshairY },
+          3: { width: crosshairX, height: 1100 - crosshairY },
+          4: { width: 1700 - crosshairX, height: 1100 - crosshairY },
+        };
+
+        let hasTitle = false;
+        let hasPhoto = false;
+
+        Object.keys(newModules).forEach((module) => {
+          const maxCols = Math.floor((bounds[module].width - 10) / 150);
+          const maxRows = Math.floor((bounds[module].height - 10) / 100);
+          if (maxCols < 1 || maxRows < 1) return;
+
+          const numElements = Math.floor(Math.random() * 3) + 2; // 2-4 elements
+          let col = 0;
+          let row = 0;
+
+          for (let i = 0; i < numElements; i++) {
+            let type = types[Math.floor(Math.random() * types.length)];
+            if (!hasTitle && i === 0 && Math.random() > 0.5) {
+              type = 'title';
+              hasTitle = true;
+            } else if (!hasPhoto && i === 1 && Math.random() > 0.5) {
+              type = 'photo';
+              hasPhoto = true;
+            }
+
+            if (col >= maxCols) {
+              col = 0;
+              row += 1;
+            }
+            if (row >= maxRows) break;
+
+            newModules[module].push({ type, col, row });
+            col += 1;
+          }
+        });
+
+        // Ensure at least one title and photo
+        if (!hasTitle) {
+          newModules[1].unshift({ type: 'title', col: 0, row: 0 });
+        }
+        if (!hasPhoto) {
+          const mod = newModules[2].length > 0 ? 2 : 3;
+          newModules[mod].push({ type: 'photo', col: 0, row: Math.min(newModules[mod].length, Math.floor((bounds[mod].height - 10) / 100) - 1) });
+        }
+
+        setModules(newModules);
+        console.log('Randomized spread:', newModules);
+      };
 
       const exportToLaTeX = () => {
-        const pxToIn = 0.01389; // 1px = 0.01389in at 72dpi
+        const pxToIn = 0.01389;
         let latex = `
 \\documentclass{article}
 \\usepackage[landscape, paperwidth=17in, paperheight=11in, margin=0in]{geometry}
@@ -562,23 +751,32 @@
 
           const elementWidth = 150;
           const elementHeight = 100;
-          modules[module].forEach(({ type, col, row }) => {
-            const x = bounds.x + 10 + col * elementWidth;
-            const y = bounds.y + 10 + row * elementHeight;
+          modules[module].forEach(({ type, col, row, width, height, isDominant, spansModules }) => {
+            const elWidth = isDominant ? 300 : (type === 'shape' ? (width || 150) : 150);
+            const elHeight = isDominant ? 200 : (type === 'shape' ? (height || 100) : 100);
+            let x = bounds.x + 10 + col * elementWidth;
+            let y = bounds.y + 10 + row * elementHeight;
+            if (isDominant) {
+              x = crosshairX - 150;
+              y = bounds.y + 10 + row * elementHeight;
+            }
+
             latex += `  % Element: ${type} at col ${col}, row ${row}\n`;
-            latex += `  \\draw (${x},${y}) rectangle (${x + 140},${y + 90});\n`;
+            if (type === 'shape') {
+              latex += `  \\draw[fill=gray, opacity=0.5] (${x},${y}) rectangle (${x + elWidth - 10},${y + elHeight - 10});\n`;
+            } else {
+              latex += `  \\draw (${x},${y}) rectangle (${x + elWidth - 10},${y + elHeight - 10});\n`;
+            }
 
             if (type === 'title') {
-              latex += `  \\node[font=\\normalsize, anchor=north west] at (${x + 5},${y + 85}) {Title};\n`;
+              latex += `  \\node[font=\\normalsize, anchor=north west] at (${x + 5},${y + elHeight - 15}) {Title};\n`;
             } else if (type === 'copy') {
-              latex += `  \\node[font=\\small, anchor=north west] at (${x + 5},${y + 85}) {Body text...};\n`;
-            } else if (type === 'photo') {
-              latex += `  \\draw (${x + 5},${y + 5}) rectangle (${x + 85},${y + 85});\n`;
-              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 5}) {Photo};\n`;
+              latex += `  \\node[font=\\small, anchor=north west] at (${x + 5},${y + elHeight - 15}) {Body text...};\n`;
+            } else if (type === 'photo' || type === 'dominant-photo') {
+              latex += `  \\draw (${x + 5},${y + 5}) rectangle (${x + elWidth - 15},${y + elHeight - 15});\n`;
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 5}) {${type === 'dominant-photo' ? 'Dominant Photo' : 'Photo'}};\n`;
             } else if (type === 'caption') {
-              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 85}) {Caption...};\n`;
-            } else if (type === 'shape') {
-              latex += `  \\draw[fill=gray] (${x + 5},${y + 35}) rectangle (${x + 55},${y + 85});\n`;
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + elHeight - 15}) {Caption...};\n`;
             }
           });
 
@@ -605,7 +803,7 @@
       return (
         <ErrorBoundary>
           <div className="flex">
-            <Sidebar exportToLaTeX={exportToLaTeX} />
+            <Sidebar exportToLaTeX={exportToLaTeX} randomizeSpread={randomizeSpread} />
             <div className="p-4 flex-1">
               <h1 className="text-2xl mb-4 text-brown-800">PrintVis - Design Your Yearbook Spread</h1>
               <SpreadCanvas
@@ -623,6 +821,10 @@
                 setDraggingElement={setDraggingElement}
                 dragOffset={dragOffset}
                 setDragOffset={setDragOffset}
+                isResizing={isResizing}
+                setIsResizing={setIsResizing}
+                resizeElement={resizeElement}
+                setResizeElement={setResizeElement}
                 exportToLaTeX={exportToLaTeX}
               />
             </div>

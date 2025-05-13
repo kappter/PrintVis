@@ -35,6 +35,14 @@ canvas.cursor-pointer {
   background-color: #6B3A0F;
 }
 
+.resize-handle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #000;
+  cursor: se-resize;
+}
+
 @media (max-width: 768px) {
   .w-64 {
     width: 100%;
