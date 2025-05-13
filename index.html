@@ -85,20 +85,24 @@
       }
     }
 
-    const SpreadCanvas = () => {
+    const SpreadCanvas = ({
+      crosshairX,
+      setCrosshairX,
+      crosshairY,
+      setCrosshairY,
+      dragging,
+      setDragging,
+      selectedModule,
+      setSelectedModule,
+      modules,
+      setModules,
+      draggingElement,
+      setDraggingElement,
+      dragOffset,
+      setDragOffset,
+      exportToLaTeX
+    }) => {
       console.log('SpreadCanvas rendering');
-      const [crosshairX, setCrosshairX] = useState(850);
-      const [crosshairY, setCrosshairY] = useState(550);
-      const [dragging, setDragging] = useState(null);
-      const [selectedModule, setSelectedModule] = useState(null);
-      const [modules, setModules] = useState({
-        1: [], // Top-left: [{ type, col, row }, ...]
-        2: [], // Top-right
-        3: [], // Bottom-left
-        4: [], // Bottom-right
-      });
-      const [draggingElement, setDraggingElement] = useState(null);
-      const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
       const handleMouseDown = (e, type) => {
         console.log('Mouse down:', type, 'Current dragging:', dragging);
@@ -292,91 +296,6 @@
         });
       };
 
-      const exportToLaTeX = () => {
-        const pxToIn = 0.01389; // 1px = 0.01389in at 72dpi
-        let latex = `
-\\documentclass{article}
-\\usepackage[landscape, paperwidth=17in, paperheight=11in, margin=0in]{geometry}
-\\usepackage{tikz}
-\\usepackage{times}
-\\usepackage[T1]{fontenc}
-\\usepackage{textcomp}
-\\pagestyle{empty}
-\\begin{document}
-\\begin{tikzpicture}[x=${pxToIn}in, y=${pxToIn}in]
-  % Pages
-  \\draw[fill=white] (0,0) rectangle (850,1100);
-  \\draw[fill=white] (850,0) rectangle (1700,1100);
-  \\draw (0,0) rectangle (850,1100);
-  \\draw (850,0) rectangle (1700,1100);
-
-  % Crosshairs
-  \\draw[red] (${crosshairX},0) -- (${crosshairX},1100);
-  \\draw[red] (0,${crosshairY}) -- (1700,${crosshairY});
-
-  % Spread Title
-  \\node[font=\\Large, anchor=south west] at (50,1000) {Spread Title};
-
-  % Page Number/Label
-  \\node[font=\\small, anchor=south west] at (50,20) {Page 1 - Senior Events};
-`;
-
-        const modulesBounds = {
-          1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
-          2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
-          3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
-          4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
-        };
-
-        Object.keys(modulesBounds).forEach((module) => {
-          const bounds = modulesBounds[module];
-          if (parseInt(module) === selectedModule) {
-            latex += `  % Selected module border\n`;
-            latex += `  \\draw[blue, line width=2pt] (${bounds.x},${bounds.y}) rectangle (${bounds.x + bounds.width},${bounds.y + bounds.height});\n`;
-          }
-
-          const elementWidth = 150;
-          const elementHeight = 100;
-          modules[module].forEach(({ type, col, row }) => {
-            const x = bounds.x + 10 + col * elementWidth;
-            const y = bounds.y + 10 + row * elementHeight;
-            latex += `  % Element: ${type} at col ${col}, row ${row}\n`;
-            latex += `  \\draw (${x},${y}) rectangle (${x + 140},${y + 90});\n`;
-
-            if (type === 'title') {
-              latex += `  \\node[font=\\normalsize, anchor=north west] at (${x + 5},${y + 85}) {Title};\n`;
-            } else if (type === 'copy') {
-              latex += `  \\node[font=\\small, anchor=north west] at (${x + 5},${y + 85}) {Body text...};\n`;
-            } else if (type === 'photo') {
-              latex += `  \\draw (${x + 5},${y + 5}) rectangle (${x + 85},${y + 85});\n`;
-              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 5}) {Photo};\n`;
-            } else if (type === 'caption') {
-              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 85}) {Caption...};\n`;
-            } else if (type === 'shape') {
-              latex += `  \\draw[fill=gray] (${x + 5},${y + 35}) rectangle (${x + 55},${y + 85});\n`;
-            }
-          });
-
-          if (modules[module].length === 0) {
-            latex += `  \\node[font=\\normalsize, anchor=north west] at (${bounds.x + 10},${bounds.y + 1050}) {Module ${module}: Click to add content};\n`;
-          }
-        });
-
-        latex += `
-\\end{tikzpicture}
-\\end{document}
-`;
-
-        const blob = new Blob([latex], { type: 'text/x-tex' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'spread.tex';
-        a.click();
-        URL.revokeObjectURL(url);
-        console.log('Exported LaTeX file');
-      };
-
       useEffect(() => {
         console.log('useEffect running for canvas, modules:', modules);
         const canvas = document.getElementById('spread-canvas');
@@ -563,7 +482,7 @@
       );
     };
 
-    const Sidebar = () => {
+    const Sidebar = ({ exportToLaTeX }) => {
       console.log('Sidebar rendering');
       return (
         <div className="w-64 bg-green-800 text-white p-4">
@@ -575,7 +494,7 @@
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Export Design</button>
           <button
             className="w-full bg-brown-600 p-2 mb-2 rounded"
-            onClick={() => document.getElementById('spread-canvas').exportToLaTeX()}
+            onClick={exportToLaTeX}
           >
             Export PDF
           </button>
@@ -585,13 +504,127 @@
 
     const App = () => {
       console.log('App rendering');
+      const [crosshairX, setCrosshairX] = useState(850);
+      const [crosshairY, setCrosshairY] = useState(550);
+      const [dragging, setDragging] = useState(null);
+      const [selectedModule, setSelectedModule] = useState(null);
+      const [modules, setModules] = useState({
+        1: [], // Top-left: [{ type, col, row }, ...]
+        2: [], // Top-right
+        3: [], // Bottom-left
+        4: [], // Bottom-right
+      });
+      const [draggingElement, setDraggingElement] = useState(null);
+      const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+      const exportToLaTeX = () => {
+        const pxToIn = 0.01389; // 1px = 0.01389in at 72dpi
+        let latex = `
+\\documentclass{article}
+\\usepackage[landscape, paperwidth=17in, paperheight=11in, margin=0in]{geometry}
+\\usepackage{tikz}
+\\usepackage{times}
+\\usepackage[T1]{fontenc}
+\\usepackage{textcomp}
+\\pagestyle{empty}
+\\begin{document}
+\\begin{tikzpicture}[x=${pxToIn}in, y=${pxToIn}in]
+  % Pages
+  \\draw[fill=white] (0,0) rectangle (850,1100);
+  \\draw[fill=white] (850,0) rectangle (1700,1100);
+  \\draw (0,0) rectangle (850,1100);
+  \\draw (850,0) rectangle (1700,1100);
+
+  % Crosshairs
+  \\draw[red] (${crosshairX},0) -- (${crosshairX},1100);
+  \\draw[red] (0,${crosshairY}) -- (1700,${crosshairY});
+
+  % Spread Title
+  \\node[font=\\Large, anchor=south west] at (50,1000) {Spread Title};
+
+  % Page Number/Label
+  \\node[font=\\small, anchor=south west] at (50,20) {Page 1 - Senior Events};
+`;
+
+        const modulesBounds = {
+          1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+          2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+          3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+          4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
+        };
+
+        Object.keys(modulesBounds).forEach((module) => {
+          const bounds = modulesBounds[module];
+          if (parseInt(module) === selectedModule) {
+            latex += `  % Selected module border\n`;
+            latex += `  \\draw[blue, line width=2pt] (${bounds.x},${bounds.y}) rectangle (${bounds.x + bounds.width},${bounds.y + bounds.height});\n`;
+          }
+
+          const elementWidth = 150;
+          const elementHeight = 100;
+          modules[module].forEach(({ type, col, row }) => {
+            const x = bounds.x + 10 + col * elementWidth;
+            const y = bounds.y + 10 + row * elementHeight;
+            latex += `  % Element: ${type} at col ${col}, row ${row}\n`;
+            latex += `  \\draw (${x},${y}) rectangle (${x + 140},${y + 90});\n`;
+
+            if (type === 'title') {
+              latex += `  \\node[font=\\normalsize, anchor=north west] at (${x + 5},${y + 85}) {Title};\n`;
+            } else if (type === 'copy') {
+              latex += `  \\node[font=\\small, anchor=north west] at (${x + 5},${y + 85}) {Body text...};\n`;
+            } else if (type === 'photo') {
+              latex += `  \\draw (${x + 5},${y + 5}) rectangle (${x + 85},${y + 85});\n`;
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 5}) {Photo};\n`;
+            } else if (type === 'caption') {
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 85}) {Caption...};\n`;
+            } else if (type === 'shape') {
+              latex += `  \\draw[fill=gray] (${x + 5},${y + 35}) rectangle (${x + 55},${y + 85});\n`;
+            }
+          });
+
+          if (modules[module].length === 0) {
+            latex += `  \\node[font=\\normalsize, anchor=north west] at (${bounds.x + 10},${bounds.y + 1050}) {Module ${module}: Click to add content};\n`;
+          }
+        });
+
+        latex += `
+\\end{tikzpicture}
+\\end{document}
+`;
+
+        const blob = new Blob([latex], { type: 'text/x-tex' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'spread.tex';
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('Exported LaTeX file');
+      };
+
       return (
         <ErrorBoundary>
           <div className="flex">
-            <Sidebar />
+            <Sidebar exportToLaTeX={exportToLaTeX} />
             <div className="p-4 flex-1">
               <h1 className="text-2xl mb-4 text-brown-800">PrintVis - Design Your Yearbook Spread</h1>
-              <SpreadCanvas />
+              <SpreadCanvas
+                crosshairX={crosshairX}
+                setCrosshairX={setCrosshairX}
+                crosshairY={crosshairY}
+                setCrosshairY={setCrosshairY}
+                dragging={dragging}
+                setDragging={setDragging}
+                selectedModule={selectedModule}
+                setSelectedModule={setSelectedModule}
+                modules={modules}
+                setModules={setModules}
+                draggingElement={draggingElement}
+                setDraggingElement={setDraggingElement}
+                dragOffset={dragOffset}
+                setDragOffset={setDragOffset}
+                exportToLaTeX={exportToLaTeX}
+              />
             </div>
           </div>
         </ErrorBoundary>
