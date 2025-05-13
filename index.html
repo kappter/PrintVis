@@ -55,6 +55,7 @@
     <div class="p-4 text-gray-600">Loading PrintVis...</div>
   </div>
   <script type="text/babel">
+    console.log('Babel script loaded, starting JSX transpilation');
     const { useState, useEffect } = React;
 
     // Error Boundary Component
@@ -77,7 +78,7 @@
         if (this.state.hasError) {
           return (
             <h1 className="text-red-600 p-4">
-              Something went wrong: {this.state.error?.message || 'Unknown error'}
+              Something went wrong: {this.state.error && this.state.error.message ? this.state.error.message : 'Unknown error'}
             </h1>
           );
         }
@@ -171,7 +172,6 @@
             return prev;
           }
 
-          // Find next position
           let col = 0;
           let row = 0;
           if (moduleElements.length > 0) {
@@ -184,7 +184,6 @@
             }
           }
 
-          // Check if new row fits in quadrant
           if ((row + 1) * elementHeight > bounds.height - 10) {
             console.warn('No more space in quadrant', selectedModule);
             return prev;
@@ -212,7 +211,6 @@
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // Draw pages
         ctx.fillStyle = '#fff';
         ctx.fillRect(0, 0, 850, 1100);
         ctx.fillRect(850, 0, 850, 1100);
@@ -220,7 +218,6 @@
         ctx.strokeRect(0, 0, 850, 1100);
         ctx.strokeRect(850, 0, 850, 1100);
 
-        // Draw crosshairs
         ctx.strokeStyle = '#ff0000';
         ctx.beginPath();
         ctx.moveTo(crosshairX, 0);
@@ -229,7 +226,6 @@
         ctx.lineTo(1700, crosshairY);
         ctx.stroke();
 
-        // Define module boundaries
         const modulesBounds = {
           1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
           2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
@@ -237,7 +233,6 @@
           4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
         };
 
-        // Draw modules and elements
         Object.keys(modulesBounds).forEach((module) => {
           const bounds = modulesBounds[module];
           if (parseInt(module) === selectedModule) {
@@ -253,11 +248,9 @@
             const x = bounds.x + 10 + col * elementWidth;
             const y = bounds.y + 10 + row * elementHeight;
 
-            // Draw element box
             ctx.strokeStyle = '#000';
             ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
 
-            // Draw content
             ctx.fillStyle = '#000';
             if (type === 'title') {
               ctx.font = '16px Arial';

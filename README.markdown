@@ -67,7 +67,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 1. Push files to your GitHub repository:
    ```bash
    git add index.html styles.css favicon.ico README.md
-   git commit -m "Deploy PrintVis with grid tiling and rendering fix"
+   git commit -m "Fix Babel SyntaxError and deploy PrintVis"
    git push origin main
    ```
 2. Enable GitHub Pages in repository settings:
@@ -82,10 +82,14 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
   - Ensure `index.html`, `styles.css`, and `favicon.ico` are in the root of the `main` branch, and the repository is public.
   - Verify GitHub Pages is set to `main`/`/ (root)` in **Settings** > **Pages**.
   - Confirm `index.html` uses `ReactDOM.createRoot` (not `ReactDOM.render`).
+  - Check for Babel SyntaxError in console (F12). If present (e.g., `Unexpected token`), ensure `ErrorBoundary` avoids modern JS (e.g., optional chaining `?.`).
   - Test locally (`python -m http.server 8000`) to isolate deployment issues.
-  - Open browser console (F12) and check for errors beyond known warnings (React DevTools, Tailwind CDN, Babel).
-  - Look for logs like `App rendering`, `SpreadCanvas rendering`, `Sidebar rendering`.
+  - Look for logs like `Babel script loaded`, `App rendering`, `SpreadCanvas rendering`, `Sidebar rendering`.
   - If errors appear in the error boundary (e.g., “Something went wrong”), share the message.
+- **Babel SyntaxError**:
+  - Check console for errors like `Unexpected token` in `babel.min.js`.
+  - Verify `index.html` uses compatible JS in `ErrorBoundary` (e.g., `this.state.error && this.state.error.message` instead of `this.state.error?.message`).
+  - If persistent, share full error stack for debugging.
 - **404 Errors**:
   - Confirm `styles.css` and `favicon.ico` are correctly named (case-sensitive, e.g., `styles.css` not `Styles.css`) and in the root.
   - Inspect the Network tab (F12) for failed requests.
