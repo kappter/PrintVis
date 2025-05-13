@@ -58,7 +58,6 @@
     console.log('Babel script loaded, starting JSX transpilation');
     const { useState, useEffect } = React;
 
-    // Error Boundary Component
     class ErrorBoundary extends React.Component {
       constructor(props) {
         super(props);
@@ -98,6 +97,8 @@
         3: [], // Bottom-left
         4: [], // Bottom-right
       });
+      const [draggingElement, setDraggingElement] = useState(null);
+      const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
       const handleMouseDown = (e, type) => {
         console.log('Mouse down:', type, 'Current dragging:', dragging);
@@ -107,6 +108,47 @@
         } else {
           setDragging(type);
           console.log('Started dragging:', type);
+        }
+      };
+
+      const handleCanvasMouseDown = (e) => {
+        if (dragging) return; // Prioritize crosshair dragging
+        const canvas = document.getElementById('spread-canvas');
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const modulesBounds = {
+          1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+          2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+          3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+          4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
+        };
+
+        for (const module in modules) {
+          const bounds = modulesBounds[module];
+          if (
+            x >= bounds.x &&
+            x <= bounds.x + bounds.width &&
+            y >= bounds.y &&
+            y <= bounds.y + bounds.height
+          ) {
+            modules[module].forEach((element, index) => {
+              const elementX = bounds.x + 10 + element.col * 150;
+              const elementY = bounds.y + 10 + element.row * 100;
+              if (
+                x >= elementX &&
+                x <= elementX + 140 &&
+                y >= elementY &&
+                y <= elementY + 90
+              ) {
+                setDraggingElement({ module, index, ...element });
+                setDragOffset({ x: x - elementX, y: y - elementY });
+                console.log('Started dragging element:', element, 'in module:', module);
+              }
+            });
+            break;
+          }
         }
       };
 
@@ -123,6 +165,25 @@
           const newY = Math.max(100, Math.min(1000, e.clientY - rect.top));
           setCrosshairY(newY);
           console.log('Moving horizontal crosshair to:', newY);
+        } else if (draggingElement) {
+          const canvas = document.getElementById('spread-canvas');
+          const rect = canvas.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+
+          const bounds = {
+            1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+            2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+            3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+            4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
+          }[draggingElement.module];
+
+          const maxCols = Math.floor((bounds.width - 10) / 150);
+          const maxRows = Math.floor((bounds.height - 10) / 100);
+          const newCol = Math.max(0, Math.min(maxCols - 1, Math.floor((x - bounds.x - 10 - dragOffset.x) / 150)));
+          const newRow = Math.max(0, Math.min(maxRows - 1, Math.floor((y - bounds.y - 10 - dragOffset.y) / 100)));
+
+          setDraggingElement((prev) => ({ ...prev, col: newCol, row: newRow }));
         }
       };
 
@@ -131,9 +192,43 @@
           console.log('Mouse up, dragging stopped');
           setDragging(null);
         }
+        if (draggingElement) {
+          const { module, index, col, row } = draggingElement;
+          const bounds = {
+            1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+            2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+            3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+            4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
+          }[module];
+
+          const maxCols = Math.floor((bounds.width - 10) / 150);
+          const maxRows = Math.floor((bounds.height - 10) / 100);
+          const newCol = Math.max(0, Math.min(maxCols - 1, col));
+          const newRow = Math.max(0, Math.min(maxRows - 1, row));
+
+          const isOccupied = modules[module].some(
+            (el, i) =>
+              i !== index &&
+              el.col === newCol &&
+              el.row === newRow
+          );
+
+          if (!isOccupied) {
+            setModules((prev) => {
+              const updatedModule = [...prev[module]];
+              updatedModule[index] = { ...updatedModule[index], col: newCol, row: newRow };
+              console.log('Moved element to:', { col: newCol, row: newRow }, 'in module:', module);
+              return { ...prev, [module]: updatedModule };
+            });
+          } else {
+            console.warn('Position occupied, element not moved');
+          }
+          setDraggingElement(null);
+        }
       };
 
       const handleCanvasClick = (e) => {
+        if (dragging || draggingElement) return;
         const canvas = document.getElementById('spread-canvas');
         const rect = canvas.getBoundingClientRect();
         const x = e.clientX - rect.left;
@@ -197,6 +292,91 @@
         });
       };
 
+      const exportToLaTeX = () => {
+        const pxToIn = 0.01389; // 1px = 0.01389in at 72dpi
+        let latex = `
+\\documentclass{article}
+\\usepackage[landscape, paperwidth=17in, paperheight=11in, margin=0in]{geometry}
+\\usepackage{tikz}
+\\usepackage{times}
+\\usepackage[T1]{fontenc}
+\\usepackage{textcomp}
+\\pagestyle{empty}
+\\begin{document}
+\\begin{tikzpicture}[x=${pxToIn}in, y=${pxToIn}in]
+  % Pages
+  \\draw[fill=white] (0,0) rectangle (850,1100);
+  \\draw[fill=white] (850,0) rectangle (1700,1100);
+  \\draw (0,0) rectangle (850,1100);
+  \\draw (850,0) rectangle (1700,1100);
+
+  % Crosshairs
+  \\draw[red] (${crosshairX},0) -- (${crosshairX},1100);
+  \\draw[red] (0,${crosshairY}) -- (1700,${crosshairY});
+
+  % Spread Title
+  \\node[font=\\Large, anchor=south west] at (50,1000) {Spread Title};
+
+  % Page Number/Label
+  \\node[font=\\small, anchor=south west] at (50,20) {Page 1 - Senior Events};
+`;
+
+        const modulesBounds = {
+          1: { x: 0, y: 0, width: crosshairX, height: crosshairY },
+          2: { x: crosshairX, y: 0, width: 1700 - crosshairX, height: crosshairY },
+          3: { x: 0, y: crosshairY, width: crosshairX, height: 1100 - crosshairY },
+          4: { x: crosshairX, y: crosshairY, width: 1700 - crosshairX, height: 1100 - crosshairY },
+        };
+
+        Object.keys(modulesBounds).forEach((module) => {
+          const bounds = modulesBounds[module];
+          if (parseInt(module) === selectedModule) {
+            latex += `  % Selected module border\n`;
+            latex += `  \\draw[blue, line width=2pt] (${bounds.x},${bounds.y}) rectangle (${bounds.x + bounds.width},${bounds.y + bounds.height});\n`;
+          }
+
+          const elementWidth = 150;
+          const elementHeight = 100;
+          modules[module].forEach(({ type, col, row }) => {
+            const x = bounds.x + 10 + col * elementWidth;
+            const y = bounds.y + 10 + row * elementHeight;
+            latex += `  % Element: ${type} at col ${col}, row ${row}\n`;
+            latex += `  \\draw (${x},${y}) rectangle (${x + 140},${y + 90});\n`;
+
+            if (type === 'title') {
+              latex += `  \\node[font=\\normalsize, anchor=north west] at (${x + 5},${y + 85}) {Title};\n`;
+            } else if (type === 'copy') {
+              latex += `  \\node[font=\\small, anchor=north west] at (${x + 5},${y + 85}) {Body text...};\n`;
+            } else if (type === 'photo') {
+              latex += `  \\draw (${x + 5},${y + 5}) rectangle (${x + 85},${y + 85});\n`;
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 5}) {Photo};\n`;
+            } else if (type === 'caption') {
+              latex += `  \\node[font=\\scriptsize, anchor=north west] at (${x + 5},${y + 85}) {Caption...};\n`;
+            } else if (type === 'shape') {
+              latex += `  \\draw[fill=gray] (${x + 5},${y + 35}) rectangle (${x + 55},${y + 85});\n`;
+            }
+          });
+
+          if (modules[module].length === 0) {
+            latex += `  \\node[font=\\normalsize, anchor=north west] at (${bounds.x + 10},${bounds.y + 1050}) {Module ${module}: Click to add content};\n`;
+          }
+        });
+
+        latex += `
+\\end{tikzpicture}
+\\end{document}
+`;
+
+        const blob = new Blob([latex], { type: 'text/x-tex' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'spread.tex';
+        a.click();
+        URL.revokeObjectURL(url);
+        console.log('Exported LaTeX file');
+      };
+
       useEffect(() => {
         console.log('useEffect running for canvas, modules:', modules);
         const canvas = document.getElementById('spread-canvas');
@@ -244,11 +424,12 @@
 
           const elementWidth = 150;
           const elementHeight = 100;
-          modules[module].forEach(({ type, col, row }) => {
+          modules[module].forEach(({ type, col, row }, index) => {
             const x = bounds.x + 10 + col * elementWidth;
             const y = bounds.y + 10 + row * elementHeight;
 
-            ctx.strokeStyle = '#000';
+            ctx.strokeStyle = draggingElement?.module === module && draggingElement?.index === index ? '#ffff00' : '#000';
+            ctx.lineWidth = draggingElement?.module === module && draggingElement?.index === index ? 3 : 1;
             ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
 
             ctx.fillStyle = '#000';
@@ -269,6 +450,7 @@
               ctx.fillStyle = '#666';
               ctx.fillRect(x + 5, y + 5, 50, 50);
             }
+            ctx.lineWidth = 1;
           });
 
           if (modules[module].length === 0) {
@@ -278,13 +460,42 @@
           }
         });
 
+        if (draggingElement) {
+          const bounds = modulesBounds[draggingElement.module];
+          const x = bounds.x + 10 + draggingElement.col * 150;
+          const y = bounds.y + 10 + draggingElement.row * 100;
+          ctx.strokeStyle = '#ffff00';
+          ctx.lineWidth = 3;
+          ctx.strokeRect(x, y, 140, 90);
+          ctx.lineWidth = 1;
+
+          ctx.fillStyle = '#000';
+          if (draggingElement.type === 'title') {
+            ctx.font = '16px Arial';
+            ctx.fillText('Title', x + 5, y + 20);
+          } else if (draggingElement.type === 'copy') {
+            ctx.font = '12px Arial';
+            ctx.fillText('Body text...', x + 5, y + 20);
+          } else if (draggingElement.type === 'photo') {
+            ctx.strokeRect(x + 5, y + 5, 80, 80);
+            ctx.font = '10px Arial';
+            ctx.fillText('Photo', x + 5, y + 95);
+          } else if (draggingElement.type === 'caption') {
+            ctx.font = '10px Arial';
+            ctx.fillText('Caption...', x + 5, y + 20);
+          } else if (draggingElement.type === 'shape') {
+            ctx.fillStyle = '#666';
+            ctx.fillRect(x + 5, y + 5, 50, 50);
+          }
+        }
+
         ctx.font = '24px Arial';
         ctx.fillStyle = '#000';
         ctx.fillText('Spread Title', 50, 100);
 
         ctx.font = '14px Arial';
         ctx.fillText('Page 1 - Senior Events', 50, 1080);
-      }, [crosshairX, crosshairY, selectedModule, modules]);
+      }, [crosshairX, crosshairY, selectedModule, modules, draggingElement]);
 
       return (
         <div className="relative">
@@ -292,7 +503,8 @@
             id="spread-canvas"
             width="1700"
             height="1100"
-            className="border"
+            className="border cursor-pointer"
+            onMouseDown={handleCanvasMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onClick={handleCanvasClick}
@@ -360,6 +572,12 @@
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Add Shape</button>
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Edit Title</button>
           <button className="w-full bg-brown-600 p-2 mb-2 rounded">Export Design</button>
+          <button
+            className="w-full bg-brown-600 p-2 mb-2 rounded"
+            onClick={() => document.getElementById('spread-canvas').exportToLaTeX()}
+          >
+            Export PDF
+          </button>
         </div>
       );
     };

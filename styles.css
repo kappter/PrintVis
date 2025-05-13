@@ -7,6 +7,10 @@ canvas {
   background: #fff;
 }
 
+canvas.cursor-pointer {
+  cursor: pointer;
+}
+
 .bg-brown-600 {
   background-color: #8B4513;
 }

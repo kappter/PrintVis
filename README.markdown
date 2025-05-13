@@ -1,6 +1,6 @@
 # PrintVis
 
-PrintVis is a web-based tool designed to help yearbook students and educators visualize and create two-page yearbook spreads (17" x 11", two 8.5" x 11" pages side by side). It emphasizes a four-module "bullseye" design approach, where students can drag crosshairs to define four quadrants and add content to each module using a toolbar. Elements are tiled left to right, top to bottom within each quadrant, constrained to its boundaries, with a title and page number/label (e.g., “Page 1 - Senior Events”) anchoring the design. Built with an intuitive interface, PrintVis is ideal for high school yearbook classes.
+PrintVis is a web-based tool designed to help yearbook students and educators visualize and create two-page yearbook spreads (17" x 11", two 8.5" x 11" pages side by side). It emphasizes a four-module "bullseye" design approach, where students can drag crosshairs to define four quadrants, add content to each module using a toolbar, and restructure the layout by dragging elements. Elements are tiled left to right, top to bottom within each quadrant, constrained to its boundaries, with a title and page number/label (e.g., “Page 1 - Senior Events”) anchoring the design. The spread can be exported as a landscape PDF. Built with an intuitive interface, PrintVis is ideal for high school yearbook classes.
 
 ## Features
 - **Two-Page Spread**: Visualize a 17" x 11" layout (two 8.5" x 11" pages) on a scalable canvas.
@@ -13,14 +13,16 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
   - **Caption**: Small text below photos.
   - **Shape**: Rectangle placeholder (planned: customizable shapes/colors).
 - **Element Tiling**: Elements are added to the selected quadrant, tiled left to right, top to bottom in a grid (150px x 100px boxes), constrained to the quadrant’s boundaries.
+- **Drag-and-Drop Restructuring**: Click and drag elements within a quadrant to new grid positions, snapping to the 150px x 100px grid, with yellow outline feedback during drag.
 - **Four Modules**: Each quadrant supports multiple elements, with placeholders if empty.
 - **Title Element**: A prominent title placeholder on the spread (planned: editable).
 - **Page Number and Label**: Fixed in the lower-left corner (e.g., “Page 1 - Senior Events”).
-- **Sidebar Tools**: Placeholder buttons for adding text, uploading photos, adding shapes, editing titles, and exporting designs (planned: integration with toolbar).
+- **PDF Export**: Export the spread as a 17" x 11" landscape PDF via a LaTeX file, including all canvas content (pages, crosshairs, elements, text).
+- **Sidebar Tools**: Placeholder buttons for adding text, uploading photos, adding shapes, editing titles, exporting designs, and exporting PDF.
 - **Responsive Design**: Mobile-friendly interface with a collapsible sidebar and adaptive toolbar for classroom use.
 - **Earthy Aesthetic**: Clean, modern look with greens, browns, and blues, inspired by natural tones.
 
-*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools, Tailwind CSS CDN, and Babel are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
+*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and direct PDF rendering are planned for future updates. Console warnings about React DevTools, Tailwind CSS CDN, and Babel are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
 
 ## Usage
 1. Open PrintVis in a browser (e.g., visit `https://kappter.github.io/PrintVis/` or run locally; see Installation).
@@ -37,13 +39,20 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
    - **Cp**: Add a caption.
    - **S**: Add a shape placeholder.
 6. View added elements, which tile left to right, top to bottom in the quadrant (150px x 100px boxes). Elements stop adding if the quadrant is full.
-7. Check the spread title (“Spread Title”) and page number/label (“Page 1 - Senior Events”) in the lower-left corner.
-8. Explore the sidebar tools (currently placeholders for future functionality).
-9. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
+7. Restructure layout:
+   - Click and drag an element within its quadrant (yellow outline appears).
+   - Move to a new grid position, release to place (snaps to 150px x 100px grid).
+   - Elements cannot overlap or move outside the quadrant.
+8. Export the spread:
+   - Click “Export PDF” in the sidebar to download `spread.tex`.
+   - Compile the LaTeX file using `latexmk` (e.g., `latexmk -pdf spread.tex`) or upload to Overleaf to generate a 17" x 11" landscape PDF.
+9. Check the spread title (“Spread Title”) and page number/label (“Page 1 - Senior Events”) in the lower-left corner.
+10. Explore the sidebar tools (currently placeholders for future functionality except PDF export).
+11. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
 
-*Note*: Console warnings about React DevTools, Tailwind CSS CDN, and Babel are normal for development, do not affect student use, and can be ignored for classroom prototyping. If a quadrant is too small to add elements, a console warning appears (future: UI alert).
+*Note*: Console warnings about React DevTools, Tailwind CSS CDN, and Babel are normal for development, do not affect student use, and can be ignored for classroom prototyping. If a quadrant is too small to add elements or an element cannot be moved due to overlap, a console warning appears (future: UI alert).
 
-*Planned*: Edit text, upload photos, customize shapes, export designs as PNGs.
+*Planned*: Edit text, upload photos, customize shapes, direct PDF rendering, UI alerts for layout issues.
 
 ## Installation (for Development)
 1. Clone the repository:
@@ -67,7 +76,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 1. Push files to your GitHub repository:
    ```bash
    git add index.html styles.css favicon.ico README.md
-   git commit -m "Fix Babel SyntaxError and deploy PrintVis"
+   git commit -m "Add drag-and-drop and PDF export"
    git push origin main
    ```
 2. Enable GitHub Pages in repository settings:
@@ -81,15 +90,14 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 - **Blank Page**:
   - Ensure `index.html`, `styles.css`, and `favicon.ico` are in the root of the `main` branch, and the repository is public.
   - Verify GitHub Pages is set to `main`/`/ (root)` in **Settings** > **Pages**.
-  - Confirm `index.html` uses `ReactDOM.createRoot` (not `ReactDOM.render`).
-  - Check for Babel SyntaxError in console (F12). If present (e.g., `Unexpected token`), ensure `ErrorBoundary` avoids modern JS (e.g., optional chaining `?.`).
+  - Confirm `index.html` uses `ReactDOM.createRoot` and compatible JS (e.g., no optional chaining `?.`).
   - Test locally (`python -m http.server 8000`) to isolate deployment issues.
   - Look for logs like `Babel script loaded`, `App rendering`, `SpreadCanvas rendering`, `Sidebar rendering`.
   - If errors appear in the error boundary (e.g., “Something went wrong”), share the message.
 - **Babel SyntaxError**:
   - Check console for errors like `Unexpected token` in `babel.min.js`.
-  - Verify `index.html` uses compatible JS in `ErrorBoundary` (e.g., `this.state.error && this.state.error.message` instead of `this.state.error?.message`).
-  - If persistent, share full error stack for debugging.
+  - Verify `index.html` uses compatible JS in `ErrorBoundary` (e.g., `this.state.error && this.state.error.message`).
+  - If persistent, share full error stack.
 - **404 Errors**:
   - Confirm `styles.css` and `favicon.ico` are correctly named (case-sensitive, e.g., `styles.css` not `Styles.css`) and in the root.
   - Inspect the Network tab (F12) for failed requests.
@@ -100,7 +108,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 - **Rendering Issues**:
   - Check console for `ErrorBoundary caught`, `Canvas element not found`, or `modules` state logs.
   - Add `console.log('Root element:', document.getElementById('root'))` before `ReactDOM.createRoot` to verify DOM.
-  - Share console logs or errors for further debugging.
+  - Share console logs or errors for debugging.
 - **Crosshair Issues**:
   - If crosshairs don’t toggle (click to select, click to place), check console for `Started dragging` and `Stopped dragging` logs.
   - Ensure `handleMouseDown` toggles `dragging` state correctly.
@@ -108,6 +116,14 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
   - If elements don’t tile correctly, check console for `Adding element` logs with `col`, `row`.
   - Verify quadrant boundaries in `addElement` (e.g., `maxCols`, height check).
   - If elements don’t appear, ensure `modules` state updates in `useEffect`.
+- **Drag-and-Drop Issues**:
+  - If elements don’t drag, check console for `Started dragging element` and `Moved element` logs.
+  - Verify `handleCanvasMouseDown` detects element clicks.
+  - If elements overlap or move outside quadrant, check boundary checks in `handleMouseUp`.
+- **PDF Export Issues**:
+  - If `spread.tex` doesn’t download, check console for `Exported LaTeX file`.
+  - If PDF compilation fails, verify LaTeX code syntax and compile with `latexmk` or Overleaf.
+  - Share compilation errors for debugging.
 
 *Note*: Console warnings are safe for prototyping and hidden from students. Ensure CDN URLs are accessible.
 
