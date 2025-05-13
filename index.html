@@ -1,0 +1,174 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PrintVis - Yearbook Spread Designer</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 flex">
+  <div id="root" class="flex-1"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const SpreadCanvas = () => {
+      const [crosshairX, setCrosshairX] = useState(850);
+      const [crosshairY, setCrosshairY] = useState(550);
+      const [dragging, setDragging] = useState(null);
+
+      const handleMouseDown = (e, type) => {
+        setDragging(type);
+      };
+
+      const handleMouseMove = (e) => {
+        if (dragging === 'vertical') {
+          const canvas = document.getElementById('spread-canvas');
+          const rect = canvas.getBoundingClientRect();
+          const newX = Math.max(100, Math.min(1600, e.clientX - rect.left));
+          setCrosshairX(newX);
+        } else if (dragging === 'horizontal') {
+          const canvas = document.getElementById('spread-canvas');
+          const rect = canvas.getBoundingClientRect();
+          const newY = Math.max(100, Math.min(1000, e.clientY - rect.top));
+          setCrosshairY(newY);
+        }
+      };
+
+      const handleMouseUp = () => {
+        setDragging(null);
+      };
+
+      useEffect(() => {
+        const canvas = document.getElementById('spread-canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw pages
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, 850, 1100);
+        ctx.fillRect(850, 0, 850, 1100);
+        ctx.strokeStyle = '#000';
+        ctx.strokeRect(0, 0, 850, 1100);
+        ctx.strokeRect(850, 0, 850, 1100);
+
+        // Draw crosshairs
+        ctx.strokeStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.moveTo(crosshairX, 0);
+        ctx.lineTo(crosshairX, 1100);
+        ctx.moveTo(0, crosshairY);
+        ctx.lineTo(1700, crosshairY);
+        ctx.stroke();
+
+        // Draw quadrants (placeholder content)
+        ctx.fillStyle = '#000';
+        ctx.font = '16px Arial';
+        ctx.fillText('Module 1: Text, Photo, Shape', 50, 50);
+        ctx.fillText('Module 2: Text, Photo, Shape', 900, 50);
+        ctx.fillText('Module 3: Text, Photo, Shape', 50, 600);
+        ctx.fillText('Module 4: Text, Photo, Shape', 900, 600);
+
+        // Draw title
+        ctx.font = '24px Arial';
+        ctx.fillText('Spread Title', 50, 100);
+
+        // Draw page number and label
+        ctx.font = '14px Arial';
+        ctx.fillText('Page 1 - Senior Events', 50, 1080);
+      }, [crosshairX, crosshairY]);
+
+      return (
+        <div className="relative">
+          <canvas
+            id="spread-canvas"
+            width="1700"
+            height="1100"
+            className="border"
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+          ></canvas>
+          <div
+            className="absolute top-0 w-2 bg-red-500 cursor-col-resize"
+            style={{ left: `${crosshairX}px`, height: '1100px' }}
+            onMouseDown={(e) => handleMouseDown(e, 'vertical')}
+          ></div>
+          <div
+            className="absolute left-0 h-2 bg-red-500 cursor-row-resize"
+            style={{ top: `${crosshairY}px`, width: '1700px' }}
+            onMouseDown={(e) => handleMouseDown(e, 'horizontal')}
+          ></div>
+        </div>
+      );
+    };
+
+    const Sidebar = () => {
+      return (
+        <div className="w-64 bg-green-800 text-white p-4">
+          <h2 className="text-xl mb-4">PrintVis Tools</h2>
+          <button className="w-full bg-brown-600 p-2 mb-2 rounded">Add Text</button>
+          <button className="w-full bg-brown-600 p-2 mb-2 rounded">Upload Photo</button>
+          <button className="w-full bg-brown-600 p-2 mb-2 rounded">Add Shape</button>
+          <button className="w-full bg-brown-600 p-2 mb-2 rounded">Edit Title</button>
+          <button className="w-full bg-brown-600 p-2 mb-2 rounded">Export Design</button>
+        </div>
+      );
+    };
+
+    const App = () => {
+      return (
+        <div className="flex">
+          <Sidebar />
+          <div className="p-4 flex-1">
+            <h1 className="text-2xl mb-4 text-brown-800">PrintVis - Design Your Yearbook Spread</h1>
+            <SpreadCanvas />
+          </div>
+        </div>
+      );
+    };
+
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>

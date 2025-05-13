@@ -1,0 +1,38 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+canvas {
+  background: #fff;
+}
+
+.bg-brown-600 {
+  background-color: #8B4513;
+}
+
+.bg-brown-800 {
+  background-color: #5C4033;
+}
+
+.text-brown-800 {
+  color: #5C4033;
+}
+
+.bg-green-800 {
+  background-color: #2F4F4F;
+}
+
+@media (max-width: 768px) {
+  .w-64 {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: -100%;
+    transition: left 0.3s;
+  }
+
+  .w-64.active {
+    left: 0;
+  }
+}
