@@ -20,7 +20,7 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 - **Responsive Design**: Mobile-friendly interface with a collapsible sidebar and adaptive toolbar for classroom use.
 - **Earthy Aesthetic**: Clean, modern look with greens, browns, and blues, inspired by natural tones.
 
-*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates.
+*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools and Tailwind CSS CDN are expected in development and do not affect functionality.
 
 ## Usage
 1. Open PrintVis in a browser (e.g., visit the hosted version at `[your GitHub Pages URL]` or run locally; see Installation).
@@ -37,6 +37,8 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 7. Check the spread title (“Spread Title”) and page number/label (“Page 1 - Senior Events”) in the lower-left corner.
 8. Explore the sidebar tools (currently placeholders for future functionality).
 9. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
+
+*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN. These are normal for development and can be ignored for prototyping.
 
 *Planned*: Edit text, upload photos, customize shapes, and export designs as PNGs.
 
@@ -55,7 +57,46 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
    ```
 4. Open `http://localhost:8000` in your browser to view PrintVis.
 
-*Note*: PrintVis uses CDN-hosted React and Tailwind CSS, requiring an internet connection for the prototype.
+*Note*: PrintVis uses CDN-hosted React and Tailwind CSS, requiring an internet connection for the prototype. For production, install Tailwind CSS locally (see Production Setup).
+
+## Production Setup
+To prepare PrintVis for classroom deployment (e.g., hosting on GitHub Pages without CDN warnings):
+1. **Install Tailwind CSS Locally**:
+   - Initialize a Node.js project:
+     ```bash
+     npm init -y
+     npm install -D tailwindcss
+     npx tailwindcss init
+     ```
+   - Create `input.css`:
+     ```css
+     @tailwind base;
+     @tailwind components;
+     @tailwind utilities;
+     ```
+   - Update `tailwind.config.js`:
+     ```js
+     module.exports = {
+       content: ['./*.html'],
+       theme: { extend: {} },
+       plugins: [],
+     };
+     ```
+   - Build CSS:
+     ```bash
+     npx tailwindcss -i ./input.css -o ./styles.css
+     ```
+   - Replace `<script src="https://cdn.tailwindcss.com"></script>` in `index.html` with `<link rel="stylesheet" href="styles.css">`.
+2. **Use Production React**:
+   - Replace development React scripts with production versions:
+     ```html
+     <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
+     ```
+   - This removes the React DevTools warning.
+3. **Host on GitHub Pages**:
+   - Push to a GitHub repository and enable GitHub Pages in settings.
+   - Update the README with the live URL (e.g., `https://yourusername.github.io/PrintVis/`).
 
 ## Contributing
 We welcome feedback and contributions from students, educators, and developers! To contribute:

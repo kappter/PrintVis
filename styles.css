@@ -40,7 +40,7 @@ canvas {
     transition: left 0.3s;
   }
 
-  .w-24.active {
+  .w-64.active {
     left: 0;
   }
 
