@@ -20,7 +20,7 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 - **Responsive Design**: Mobile-friendly interface with a collapsible sidebar and adaptive toolbar for classroom use.
 - **Earthy Aesthetic**: Clean, modern look with greens, browns, and blues, inspired by natural tones.
 
-*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools and Tailwind CSS CDN are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
+*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools, Tailwind CSS CDN, and Babel are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
 
 ## Usage
 1. Open PrintVis in a browser (e.g., visit the hosted version at `https://kappter.github.io/PrintVis/` or run locally; see Installation).
@@ -38,7 +38,7 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 8. Explore the sidebar tools (currently placeholders for future functionality).
 9. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
 
-*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN when using developer tools. These are normal for development, do not affect student use, and can be ignored for classroom prototyping. A `favicon.ico 404` error may appear if the favicon is missing; this is harmless.
+*Note*: You may see console warnings about React DevTools, Tailwind CSS CDN, and Babel when using developer tools. These are normal for development, do not affect student use, and can be ignored for classroom prototyping.
 
 *Planned*: Edit text, upload photos, customize shapes, and export designs as PNGs.
 
@@ -75,13 +75,13 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 4. Update this README with the live URL and repository link.
 
 *Troubleshooting*:
-- **Blank Page**: Ensure `index.html` and `styles.css` are in the root of the `main` branch, and the repository is public. Verify GitHub Pages is set to `main`/`/ (root)`.
-- **404 Errors**: Check that `styles.css` and `favicon.ico` are correctly named (case-sensitive) and present in the root. Inspect the Network tab (F12) for failed requests.
-- **CDN Issues**: Confirm CDNs (`jsdelivr.net`, `unpkg.com`, `cdn.tailwindcss.com`) are not blocked by your network. Use Production Setup if blocked.
-- **Rendering Issues**: Test locally (`python -m http.server 8000`) to isolate deployment problems. Check console for errors beyond known warnings.
-- **Favicon 404**: A missing `favicon.ico` causes a harmless 404. Include `favicon.ico` in the root to silence it.
+- **Blank Page**: Ensure `index.html`, `styles.css`, and `favicon.ico` are in the root of the `main` branch, and the repository is public. Verify GitHub Pages is set to `main`/`/ (root)`. Check console for React errors (e.g., rendering issues).
+- **404 Errors**: Confirm `styles.css` and `favicon.ico` are correctly named (case-sensitive) and in the root. Inspect the Network tab (F12) for failed requests.
+- **CDN Issues**: Verify CDNs (`jsdelivr.net`, `unpkg.com`, `cdn.tailwindcss.com`) are not blocked by your network. Use Production Setup if blocked.
+- **Rendering Issues**: Ensure `ReactDOM.createRoot` is used in `index.html` (not `ReactDOM.render`, which is deprecated in React 18). Test locally (`python -m http.server 8000`) to isolate deployment problems. Check console for errors beyond known warnings.
+- **Console Warnings**: Warnings about React DevTools, Tailwind CDN, and Babel are safe for prototyping and hidden from students. They can be removed with the Production Setup.
 
-*Note*: Ensure CDN URLs are accessible. Console warnings (React DevTools, Tailwind CDN) are safe and hidden from students.
+*Note*: Ensure CDN URLs are accessible. Console warnings are normal and do not affect functionality.
 
 ## Production Setup
 To prepare PrintVis for long-term classroom use (e.g., hosting on GitHub Pages without CDN warnings):
@@ -118,7 +118,8 @@ To prepare PrintVis for long-term classroom use (e.g., hosting on GitHub Pages w
      <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
      ```
    - This removes the React DevTools warning.
-3. **Host on GitHub Pages**:
+3. **Precompile Babel**: Use a build tool (e.g., Vite) to precompile JSX, removing the Babel CDN and warning.
+4. **Host on GitHub Pages**:
    - Commit and push updated files.
    - Verify the app at `https://kappter.github.io/PrintVis/` with no console warnings.
 
