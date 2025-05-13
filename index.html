@@ -428,8 +428,8 @@
             const x = bounds.x + 10 + col * elementWidth;
             const y = bounds.y + 10 + row * elementHeight;
 
-            ctx.strokeStyle = draggingElement?.module === module && draggingElement?.index === index ? '#ffff00' : '#000';
-            ctx.lineWidth = draggingElement?.module === module && draggingElement?.index === index ? 3 : 1;
+            ctx.strokeStyle = draggingElement && draggingElement.module === module && draggingElement.index === index ? '#ffff00' : '#000';
+            ctx.lineWidth = draggingElement && draggingElement.module === module && draggingElement.index === index ? 3 : 1;
             ctx.strokeRect(x, y, elementWidth - 10, elementHeight - 10);
 
             ctx.fillStyle = '#000';
@@ -461,6 +461,7 @@
         });
 
         if (draggingElement) {
+          console.log('Rendering dragged element:', draggingElement);
           const bounds = modulesBounds[draggingElement.module];
           const x = bounds.x + 10 + draggingElement.col * 150;
           const y = bounds.y + 10 + draggingElement.row * 100;

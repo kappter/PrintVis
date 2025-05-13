@@ -76,7 +76,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 1. Push files to your GitHub repository:
    ```bash
    git add index.html styles.css favicon.ico README.md
-   git commit -m "Add drag-and-drop and PDF export"
+   git commit -m "Fix Babel SyntaxError for drag-and-drop"
    git push origin main
    ```
 2. Enable GitHub Pages in repository settings:
@@ -96,7 +96,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
   - If errors appear in the error boundary (e.g., “Something went wrong”), share the message.
 - **Babel SyntaxError**:
   - Check console for errors like `Unexpected token` in `babel.min.js`.
-  - Verify `index.html` uses compatible JS in `ErrorBoundary` (e.g., `this.state.error && this.state.error.message`).
+  - Verify `index.html` avoids modern JS (e.g., `draggingElement && draggingElement.module` instead of `draggingElement?.module` in `useEffect`).
   - If persistent, share full error stack.
 - **404 Errors**:
   - Confirm `styles.css` and `favicon.ico` are correctly named (case-sensitive, e.g., `styles.css` not `Styles.css`) and in the root.
