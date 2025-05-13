@@ -43,6 +43,20 @@ canvas.cursor-pointer {
   cursor: se-resize;
 }
 
+.color-selector {
+  background: #fff;
+  border: 1px solid #8B4513;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 0.75rem;
+  color: #5C4033;
+}
+
+.color-selector:focus {
+  outline: none;
+  border-color: #6B3A0F;
+}
+
 @media (max-width: 768px) {
   .w-64 {
     width: 100%;
@@ -61,5 +75,10 @@ canvas.cursor-pointer {
     left: 4px;
     flex-direction: column;
     width: auto;
+  }
+
+  .color-selector {
+    width: 100%;
+    padding: 4px;
   }
 }

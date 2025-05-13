@@ -11,21 +11,24 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
   - **Copy (C)**: Body text (e.g., sample paragraph).
   - **Photo (P)**: Placeholder image (planned: uploadable).
   - **Caption (Cp)**: Small text below photos.
-  - **Shape (S)**: Rectangle placeholder, resizable as a module backdrop (planned: customizable shapes/colors).
-  - **Dominant Photo (DP)**: Large photo (300px x 200px) that crosses the gutter, spanning two modules (e.g., 2+4 or 1+3).
-- **Element Tiling**: Elements are added to the selected quadrant, tiled left to right, top to bottom in a grid (150px x 100px boxes, except dominant photo: 300px x 200px), constrained to the quadrant’s boundaries.
-- **Drag-and-Drop Restructuring**: Click and drag elements within a quadrant (or across gutter for dominant photo) to new grid positions, snapping to the 150px x 100px grid, with yellow outline feedback during drag.
-- **Resizable Shape Backdrops**: Shapes can be resized by dragging a bottom-right handle, filling module backgrounds (min: 150px x 100px, max: quadrant size), rendered behind other elements.
+  - **Shape (S)**: Rectangle placeholder, resizable as a module backdrop, with customizable earthy colors (Slate, Olive, Sand, Rust, Forest) via a dropdown.
+  - **Dominant Photo (DP)**: Large photo (default 300px x 200px) that crosses the gutter, spanning two modules (e.g., 2+4 or 1+3), draggable and resizable.
+- **Element Tiling**: Elements are added to the selected quadrant, tiled left to right, top to bottom in a grid (150px x 100px boxes, except dominant photo: customizable size), constrained to the quadrant’s boundaries.
+- **Drag-and-Drop Restructuring**: Click and drag elements within a quadrant (or across gutter for dominant photo; yellow outline appears) to new grid positions, snapping to the 150px x 100px grid.
+- **Resizable Elements**:
+  - **Shapes**: Resize by dragging a bottom-right handle (min: 150px x 100px, max: quadrant size), rendered behind other elements.
+  - **Dominant Photo**: Resize by dragging a bottom-right handle (min: 150px x 100px, max: spanned modules’ size), centered across gutter.
+- **Shape Color Selector**: Choose earthy colors (Slate, Olive, Sand, Rust, Forest) from a toolbar dropdown to apply to new or selected shapes.
 - **Randomize Spread**: Sidebar button generates a well-designed spread with 2–4 elements per quadrant (title, copy, photo, caption, shape), ensuring at least one title and photo, balanced across modules.
 - **Four Modules**: Each quadrant supports multiple elements, with placeholders if empty.
 - **Title Element**: A prominent title placeholder on the spread (planned: editable).
 - **Page Number and Label**: Fixed in the lower-left corner (e.g., “Page 1 - Senior Events”).
-- **PDF Export**: Export the spread as a 17" x 11" landscape PDF via a LaTeX file, including all canvas content (pages, crosshairs, elements, text).
+- **PDF Export**: Export the spread as a 17" x 11" landscape PDF via a LaTeX file, including all canvas content (pages, crosshairs, elements, colors, text).
 - **Sidebar Tools**: Buttons for adding text, uploading photos, adding shapes, editing titles, exporting designs, randomizing spread, and exporting PDF.
 - **Responsive Design**: Mobile-friendly interface with a collapsible sidebar and adaptive toolbar for classroom use.
 - **Earthy Aesthetic**: Clean, modern look with greens, browns, and blues, inspired by natural tones.
 
-*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and direct PDF rendering are planned for future updates. Console warnings about React DevTools, Tailwind CSS CDN, and Babel are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
+*Note*: PrintVis is a prototype. Features like text editing, photo uploads, and direct PDF rendering are planned for future updates. Console warnings about React DevTools, Tailwind CSS CDN, and Babel are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
 
 ## Usage
 1. Open PrintVis in a browser (e.g., visit `https://kappter.github.io/PrintVis/` or run locally; see Installation).
@@ -40,30 +43,33 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
    - **C**: Add body text (copy).
    - **P**: Add a photo placeholder.
    - **Cp**: Add a caption.
-   - **S**: Add a resizable shape (click bottom-right handle to resize).
-   - **DP**: Add a dominant photo that crosses the gutter (e.g., spans modules 2+4 if added to 2 or 4).
-6. View added elements, which tile left to right, top to bottom in the quadrant (150px x 100px boxes, except dominant photo: 300px x 200px). Elements stop adding if the quadrant is full.
-7. Restructure layout:
+   - **S**: Add a resizable shape (select color from dropdown first).
+   - **DP**: Add a dominant photo (draggable and resizable) that crosses the gutter (e.g., spans modules 2+4 if added to 2 or 4).
+6. Customize shapes:
+   - Select a color (Slate, Olive, Sand, Rust, Forest) from the toolbar dropdown before adding a shape.
+   - Click an existing shape to select it, then choose a new color from the dropdown to update it.
+7. View added elements, which tile left to right, top to bottom in the quadrant (150px x 100px boxes, except dominant photo: customizable size). Elements stop adding if the quadrant is full.
+8. Restructure layout:
    - Click and drag an element within its quadrant (or across gutter for dominant photo; yellow outline appears).
    - Move to a new grid position, release to place (snaps to 150px x 100px grid).
    - Elements cannot overlap or move outside their quadrant (or spanned modules for dominant photo).
-8. Resize shapes:
-   - Click the bottom-right handle of a shape (black square).
-   - Drag to adjust size (min: 150px x 100px, max: quadrant size).
-   - Release to set size; shape renders behind other elements.
-9. Randomize spread:
-   - Click “Randomize Spread” in the sidebar to generate a balanced layout with 2–4 elements per quadrant, including at least one title and photo.
-   - Elements tile automatically, respecting quadrant boundaries.
-10. Export the spread:
+9. Resize elements:
+   - **Shapes**: Click the bottom-right handle (black square), drag to adjust size (min: 150px x 100px, max: quadrant size), release to set; renders behind other elements.
+   - **Dominant Photo**: Click the bottom-right handle, drag to adjust size (min: 150px x 100px, max: spanned modules’ size), release to set; stays centered across gutter.
+10. Randomize spread:
+    - Click “Randomize Spread” in the sidebar to generate a balanced layout with 2–4 elements per quadrant, including at least one title and photo.
+    - Shapes use the currently selected color.
+    - Elements tile automatically, respecting quadrant boundaries.
+11. Export the spread:
     - Click “Export PDF” in the sidebar to download `spread.tex`.
     - Compile the LaTeX file using `latexmk` (e.g., `latexmk -pdf spread.tex`) or upload to Overleaf to generate a 17" x 11" landscape PDF.
-11. Check the spread title (“Spread Title”) and page number/label (“Page 1 - Senior Events”) in the lower-left corner.
-12. Explore the sidebar tools (currently placeholders for future functionality except Randomize and PDF export).
-13. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
+12. Check the spread title (“Spread Title”) and page number/label (“Page 1 - Senior Events”) in the lower-left corner.
+13. Explore the sidebar tools (currently placeholders for future functionality except Randomize and PDF export).
+14. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
 
 *Note*: Console warnings about React DevTools, Tailwind CSS CDN, and Babel are normal for development, do not affect student use, and can be ignored for classroom prototyping. If a quadrant is too small to add elements or an element cannot be moved due to overlap, a console warning appears (future: UI alert).
 
-*Planned*: Edit text, upload photos, customize shapes, direct PDF rendering, UI alerts for layout issues.
+*Planned*: Edit text, upload photos, direct PDF rendering, UI alerts for layout issues.
 
 ## Installation (for Development)
 1. Clone the repository:
@@ -87,7 +93,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 1. Push files to your GitHub repository:
    ```bash
    git add index.html styles.css favicon.ico README.md
-   git commit -m "Add Randomize, Dominant Photo, Resizable Shapes"
+   git commit -m "Add resizable dominant photo, shape color selector"
    git push origin main
    ```
 2. Enable GitHub Pages in repository settings:
@@ -136,17 +142,21 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
   - Verify at least one title and photo appear, elements tile correctly.
   - Share console logs if unbalanced or empty.
 - **Dominant Photo Issues**:
-  - If dominant photo doesn’t render across gutter, check console for `Adding element: dominant-photo`.
-  - Verify it spans modules (e.g., 2+4), drags correctly, and exports to LaTeX.
+  - If dominant photo doesn’t render across gutter, resize, or drag, check console for `Adding element: dominant-photo`, `Started resizing`, `Moved element`.
+  - Verify it spans modules (e.g., 2+4), resizes within bounds, and exports to LaTeX.
   - Share console logs or LaTeX output if misaligned.
 - **Resizable Shape Issues**:
-  - If shapes don’t resize, check console for `Started resizing shape` and `Resized shape` logs.
+  - If shapes don’t resize, check console for `Started resizing` and `Resized element` logs.
   - Verify resize handle appears, shape stays behind elements, and exports to LaTeX.
   - Share console logs if resizing fails or overlaps.
+- **Shape Color Selector Issues**:
+  - If colors don’t apply, check console for `Adding element: shape`, `Updated shape color`.
+  - Verify dropdown updates `shapeColor`, applies to new/selected shapes, and exports to LaTeX.
+  - Share console logs or LaTeX output if colors missing.
 - **PDF Export Issues**:
   - If `spread.tex` doesn’t download, check console for `Exported LaTeX file` log.
   - If error `exportToLaTeX is not a function` appears, ensure `index.html` uses updated code with `exportToLaTeX` prop.
-  - If PDF compilation fails, verify LaTeX code syntax and compile with `latexmk` or Overleaf.
+  - If PDF compilation fails, verify LaTeX code syntax (including `xcolor`) and compile with `latexmk` or Overleaf.
   - Share compilation errors or console logs for debugging.
 
 *Note*: Console warnings are safe for prototyping and hidden from students. Ensure CDN URLs are accessible.
