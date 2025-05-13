@@ -23,7 +23,7 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 *Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools and Tailwind CSS CDN are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
 
 ## Usage
-1. Open PrintVis in a browser (e.g., visit the hosted version at `https://yourusername.github.io/PrintVis/` or run locally; see Installation).
+1. Open PrintVis in a browser (e.g., visit the hosted version at `https://kappter.github.io/PrintVis/` or run locally; see Installation).
 2. Explore the 17" x 11" spread canvas, showing two 8.5" x 11" pages side by side.
 3. Drag the red crosshairs (vertical and horizontal lines) to adjust the four quadrants’ sizes.
 4. Click a quadrant to select it (a blue border appears) and display the toolbar.
@@ -38,14 +38,14 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 8. Explore the sidebar tools (currently placeholders for future functionality).
 9. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
 
-*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN when using developer tools. These are normal for development, do not affect student use, and can be ignored for classroom prototyping.
+*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN when using developer tools. These are normal for development, do not affect student use, and can be ignored for classroom prototyping. A `favicon.ico 404` error may appear if the favicon is missing; this is harmless.
 
 *Planned*: Edit text, upload photos, customize shapes, and export designs as PNGs.
 
 ## Installation (for Development)
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/PrintVis.git
+   git clone https://github.com/kappter/PrintVis.git
    ```
 2. Navigate to the project directory:
    ```bash
@@ -57,13 +57,13 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
    ```
 4. Open `http://localhost:8000` in your browser to view PrintVis.
 
-*Note*: PrintVis uses CDN-hosted React and Tailwind CSS, requiring an internet connection for the prototype. For production or classroom deployment, consider the Production Setup.
+*Note*: PrintVis uses CDN-hosted React, Babel, and Tailwind CSS, requiring an internet connection for the prototype. For production or classroom deployment, consider the Production Setup.
 
 ## Deployment on GitHub Pages
 PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To deploy:
 1. Push files to your GitHub repository:
    ```bash
-   git add index.html styles.css README.md
+   git add index.html styles.css favicon.ico README.md
    git commit -m "Deploy PrintVis to GitHub Pages"
    git push origin main
    ```
@@ -71,10 +71,17 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
    - Go to **Settings** > **Pages**.
    - Set **Source** to `main` branch and `/ (root)` folder.
    - Save and wait 1–5 minutes for deployment.
-3. Access the app at `https://yourusername.github.io/PrintVis/` (replace `yourusername` with your GitHub username).
+3. Access the app at `https://kappter.github.io/PrintVis/`.
 4. Update this README with the live URL and repository link.
 
-*Note*: Ensure CDN URLs (`jsdelivr.net`, `cdn.tailwindcss.com`) are not blocked by your school network. Console warnings (React DevTools, Tailwind CDN) are safe and hidden from students.
+*Troubleshooting*:
+- **Blank Page**: Ensure `index.html` and `styles.css` are in the root of the `main` branch, and the repository is public. Verify GitHub Pages is set to `main`/`/ (root)`.
+- **404 Errors**: Check that `styles.css` and `favicon.ico` are correctly named (case-sensitive) and present in the root. Inspect the Network tab (F12) for failed requests.
+- **CDN Issues**: Confirm CDNs (`jsdelivr.net`, `unpkg.com`, `cdn.tailwindcss.com`) are not blocked by your network. Use Production Setup if blocked.
+- **Rendering Issues**: Test locally (`python -m http.server 8000`) to isolate deployment problems. Check console for errors beyond known warnings.
+- **Favicon 404**: A missing `favicon.ico` causes a harmless 404. Include `favicon.ico` in the root to silence it.
+
+*Note*: Ensure CDN URLs are accessible. Console warnings (React DevTools, Tailwind CDN) are safe and hidden from students.
 
 ## Production Setup
 To prepare PrintVis for long-term classroom use (e.g., hosting on GitHub Pages without CDN warnings):
@@ -113,7 +120,7 @@ To prepare PrintVis for long-term classroom use (e.g., hosting on GitHub Pages w
    - This removes the React DevTools warning.
 3. **Host on GitHub Pages**:
    - Commit and push updated files.
-   - Verify the app at `https://yourusername.github.io/PrintVis/` with no console warnings.
+   - Verify the app at `https://kappter.github.io/PrintVis/` with no console warnings.
 
 ## Contributing
 We welcome feedback and contributions from students, educators, and developers! To contribute:
@@ -121,7 +128,7 @@ We welcome feedback and contributions from students, educators, and developers! 
 2. Create a new branch for your feature or fix (e.g., `git checkout -b feature/photo-upload`).
 3. Commit your changes (e.g., `git commit -m "Add photo upload functionality"`).
 4. Push to your fork (e.g., `git push origin feature/photo-upload`).
-5. Open a pull request on the [PrintVis GitHub repository](https://github.com/yourusername/PrintVis).
+5. Open a pull request on the [PrintVis GitHub repository](https://github.com/kappter/PrintVis).
 
 Suggestions for new features (e.g., text editing, templates, undo/redo) are encouraged! Submit ideas via GitHub Issues.
 
