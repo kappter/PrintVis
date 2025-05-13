@@ -20,10 +20,10 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 - **Responsive Design**: Mobile-friendly interface with a collapsible sidebar and adaptive toolbar for classroom use.
 - **Earthy Aesthetic**: Clean, modern look with greens, browns, and blues, inspired by natural tones.
 
-*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools and Tailwind CSS CDN are expected in development and do not affect functionality.
+*Note*: PrintVis is a prototype. Features like text editing, photo uploads, shape customization, and exporting are planned for future updates. Console warnings about React DevTools and Tailwind CSS CDN are expected in development and do not affect functionality, making the app suitable for classroom use on GitHub Pages.
 
 ## Usage
-1. Open PrintVis in a browser (e.g., visit the hosted version at `[your GitHub Pages URL]` or run locally; see Installation).
+1. Open PrintVis in a browser (e.g., visit the hosted version at `https://yourusername.github.io/PrintVis/` or run locally; see Installation).
 2. Explore the 17" x 11" spread canvas, showing two 8.5" x 11" pages side by side.
 3. Drag the red crosshairs (vertical and horizontal lines) to adjust the four quadrants’ sizes.
 4. Click a quadrant to select it (a blue border appears) and display the toolbar.
@@ -38,7 +38,7 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
 8. Explore the sidebar tools (currently placeholders for future functionality).
 9. Test on mobile devices to ensure the sidebar collapses, the toolbar adapts, and the canvas scales properly.
 
-*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN. These are normal for development and can be ignored for prototyping.
+*Note*: You may see console warnings about React DevTools and Tailwind CSS CDN when using developer tools. These are normal for development, do not affect student use, and can be ignored for classroom prototyping.
 
 *Planned*: Edit text, upload photos, customize shapes, and export designs as PNGs.
 
@@ -57,10 +57,27 @@ PrintVis is a web-based tool designed to help yearbook students and educators vi
    ```
 4. Open `http://localhost:8000` in your browser to view PrintVis.
 
-*Note*: PrintVis uses CDN-hosted React and Tailwind CSS, requiring an internet connection for the prototype. For production, install Tailwind CSS locally (see Production Setup).
+*Note*: PrintVis uses CDN-hosted React and Tailwind CSS, requiring an internet connection for the prototype. For production or classroom deployment, consider the Production Setup.
+
+## Deployment on GitHub Pages
+PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To deploy:
+1. Push files to your GitHub repository:
+   ```bash
+   git add index.html styles.css README.md
+   git commit -m "Deploy PrintVis to GitHub Pages"
+   git push origin main
+   ```
+2. Enable GitHub Pages in repository settings:
+   - Go to **Settings** > **Pages**.
+   - Set **Source** to `main` branch and `/ (root)` folder.
+   - Save and wait 1–5 minutes for deployment.
+3. Access the app at `https://yourusername.github.io/PrintVis/` (replace `yourusername` with your GitHub username).
+4. Update this README with the live URL and repository link.
+
+*Note*: Ensure CDN URLs (`jsdelivr.net`, `cdn.tailwindcss.com`) are not blocked by your school network. Console warnings (React DevTools, Tailwind CDN) are safe and hidden from students.
 
 ## Production Setup
-To prepare PrintVis for classroom deployment (e.g., hosting on GitHub Pages without CDN warnings):
+To prepare PrintVis for long-term classroom use (e.g., hosting on GitHub Pages without CDN warnings):
 1. **Install Tailwind CSS Locally**:
    - Initialize a Node.js project:
      ```bash
@@ -95,8 +112,8 @@ To prepare PrintVis for classroom deployment (e.g., hosting on GitHub Pages with
      ```
    - This removes the React DevTools warning.
 3. **Host on GitHub Pages**:
-   - Push to a GitHub repository and enable GitHub Pages in settings.
-   - Update the README with the live URL (e.g., `https://yourusername.github.io/PrintVis/`).
+   - Commit and push updated files.
+   - Verify the app at `https://yourusername.github.io/PrintVis/` with no console warnings.
 
 ## Contributing
 We welcome feedback and contributions from students, educators, and developers! To contribute:
