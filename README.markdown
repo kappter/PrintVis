@@ -76,7 +76,7 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
 1. Push files to your GitHub repository:
    ```bash
    git add index.html styles.css favicon.ico README.md
-   git commit -m "Fix Babel SyntaxError for drag-and-drop"
+   git commit -m "Fix PDF export error"
    git push origin main
    ```
 2. Enable GitHub Pages in repository settings:
@@ -121,9 +121,10 @@ PrintVis is designed to work seamlessly on GitHub Pages for classroom use. To de
   - Verify `handleCanvasMouseDown` detects element clicks.
   - If elements overlap or move outside quadrant, check boundary checks in `handleMouseUp`.
 - **PDF Export Issues**:
-  - If `spread.tex` doesn’t download, check console for `Exported LaTeX file`.
+  - If `spread.tex` doesn’t download, check console for `Exported LaTeX file` log.
+  - If error `exportToLaTeX is not a function` appears, ensure `index.html` uses updated code with `exportToLaTeX` prop passed to `Sidebar`.
   - If PDF compilation fails, verify LaTeX code syntax and compile with `latexmk` or Overleaf.
-  - Share compilation errors for debugging.
+  - Share compilation errors or console logs for debugging.
 
 *Note*: Console warnings are safe for prototyping and hidden from students. Ensure CDN URLs are accessible.
 
